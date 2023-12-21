@@ -1,3 +1,5 @@
+'use strict';
+
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -20,6 +22,23 @@ app.use(express.urlencoded({ extended: true }));
 const db = require('./app/models');
 const Role = db.role;
 
+const initial = () => {
+  Role.create({
+    id: 1,
+    name: 'user'
+  });
+ 
+  Role.create({
+    id: 2,
+    name: 'moderator'
+  });
+ 
+  Role.create({
+    id: 3,
+    name: 'admin'
+  });
+}
+
 db.sequelize.sync();
 // force: true will drop the table if it already exists
 // db.sequelize.sync({force: true}).then(() => {
@@ -41,20 +60,3 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
-
-function initial() {
-  Role.create({
-    id: 1,
-    name: 'user'
-  });
- 
-  Role.create({
-    id: 2,
-    name: 'moderator'
-  });
- 
-  Role.create({
-    id: 3,
-    name: 'admin'
-  });
-}

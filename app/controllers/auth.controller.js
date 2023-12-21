@@ -1,14 +1,14 @@
+'use strict';
+
 const db = require('../models');
 const config = require('../config/auth.config');
 const User = db.user;
 const Role = db.role;
-
 const Op = db.Sequelize.Op;
-
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-exports.signup = (req, res) => {
+const signup = (req, res) => {
   // Save User to Database
   User.create({
     username: req.body.username,
@@ -29,7 +29,6 @@ exports.signup = (req, res) => {
           });
         });
       } else {
-        // user role = 1
         user.setRoles([1]).then(() => {
           res.send({ message: 'User registered successfully!' });
         });
@@ -40,7 +39,7 @@ exports.signup = (req, res) => {
     });
 };
 
-exports.signin = (req, res) => {
+const signin = (req, res) => {
   User.findOne({
     where: {
       username: req.body.username
@@ -50,31 +49,29 @@ exports.signin = (req, res) => {
       if (!user) {
         return res.status(404).send({ message: 'User Not found.' });
       }
-
       const passwordIsValid = bcrypt.compareSync(
         req.body.password,
         user.password
       );
-
       if (!passwordIsValid) {
         return res.status(401).send({
           accessToken: null,
           message: 'Invalid Password!'
         });
       }
-
-      const token = jwt.sign({ id: user.id },
-                              config.secret,
-                              {
-                                algorithm: 'HS256',
-                                allowInsecureKeySizes: true,
-                                expiresIn: 86400, // 24 hours
-                              });
-
+      const token = jwt.sign(
+        { id: user.id },
+        config.secret,
+        {
+          algorithm: 'HS256',
+          allowInsecureKeySizes: true,
+          expiresIn: 86400, // 24 hours
+        }
+      );
       const authorities = [];
       user.getRoles().then(roles => {
-        for (let i = 0; i < roles.length; i++) {
-          authorities.push('ROLE_' + roles[i].name.toUpperCase());
+        for (let role of roles) {
+          authorities.push('ROLE_' + role.name.toUpperCase());
         }
         res.status(200).send({
           id: user.id,
@@ -89,3 +86,5 @@ exports.signin = (req, res) => {
       res.status(500).send({ message: err.message });
     });
 };
+
+module.exports = { signup, signin };
